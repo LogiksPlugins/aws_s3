@@ -1,0 +1,28 @@
+{
+    "name": "Logiks AWS-S3",
+    "version": "1.0.0",
+    "status": "stable",
+    "type": "module",
+    "package":"olgks.aws_s3",
+    "description": "Adds AWS S3 Support for Logiks.",
+    "keywords": "logiks,modules,aws,3",
+    "license": "MIT",
+    "marketid": "",
+    "homepage": "https://github.com/LogiksPlugins/aws_s3",
+    "bugs": "https://github.com/LogiksPlugins/aws_s3/issues",
+    "private": false,
+    "dependencies": {
+        "core": "+4.0.0",
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LogiksPlugins/aws_s3.git"
+    },
+    "authors": [
+        {
+            "name": "OpenLogiks Team",
+            "email": "admin@openlogiks.org",
+            "authorid":"olgksadmin"
+        }
+    ]
+}
