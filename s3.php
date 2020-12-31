@@ -258,7 +258,7 @@ class S3 {
 	* @return array | false
 	*/
 	public static function inputFile($file, $md5sum = true) {
-		if (!file_exists($file) || !is_file($file) || !is_readable($file)) {
+	    if (!file_exists($file) || !is_file($file) || !is_readable($file)) {
 			trigger_error('S3::inputFile(): Unable to open input file: '.$file, E_USER_WARNING);
 			return false;
 		}
