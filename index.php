@@ -4,10 +4,27 @@ if(!defined('ROOT')) exit('No direct script access allowed');
 if(!function_exists("uploadPhotoToS3")) {
     include_once __DIR__."/s3.php";
 
-    if(!defined('AWS_ACCESS_KEY')) define('AWS_ACCESS_KEY', '');
-    if(!defined('AWS_SECRET_KEY')) define('AWS_SECRET_KEY', '');
-    if(!defined('AWS_S3_TARGETURI')) define('AWS_S3_TARGETURI', "https://s3.us-east-2.amazonaws.com/");
-    if(!defined('AWS_S3_EXPIRY')) define('AWS_S3_EXPIRY', 100);
+    $AWS_ACCESS_KEY="";
+    $AWS_SECRET_KEY="";
+    $AWS_S3_TARGETURI="";
+    $AWS_S3_EXPIRY="";
+    
+    if(defined('CMS_APPROOT')){
+        $defnFile= CMS_APPROOT."config/all_keys.cfg";
+        
+        $cfgData = ConfigFileReader::LoadFile($defnFile);
+        if(isset($cfgData['DEFINE'])) {
+            $AWS_ACCESS_KEY = $cfgData['DEFINE']["AWS_ACCESS_KEY"];
+            $AWS_SECRET_KEY = $cfgData['DEFINE']["AWS_SECRET_KEY"];
+            $AWS_S3_TARGETURI = $cfgData['DEFINE']["AWS_S3_TARGETURI"];
+            $AWS_S3_EXPIRY = $cfgData['DEFINE']["AWS_S3_EXPIRY"];
+        }
+    }
+    
+    if(!defined('AWS_ACCESS_KEY')) define('AWS_ACCESS_KEY', $AWS_ACCESS_KEY);
+    if(!defined('AWS_SECRET_KEY')) define('AWS_SECRET_KEY', $AWS_SECRET_KEY);
+    if(!defined('AWS_S3_TARGETURI')) define('AWS_S3_TARGETURI', $AWS_S3_TARGETURI);
+    if(!defined('AWS_S3_EXPIRY')) define('AWS_S3_EXPIRY', $AWS_S3_EXPIRY);
     
     $_ENV['TEMPDIR'] = __DIR__."/tmp/";
     $_ENV['POSTDATAPARAM'] = "data";
@@ -22,20 +39,25 @@ if(!function_exists("uploadPhotoToS3")) {
             	    "secretAccessKey"=> AWS_SECRET_KEY,
             	    "bucket"=>$bucket,
             	    "folder"=>$folder,
-            	    //"bucket_security_policy"=> S3::ACL_PUBLIC_READ,
+            	    "bucket_security_policy"=> S3::ACL_PUBLIC_READ,
             	    "security_policy"=> S3::ACL_PUBLIC_READ,
             	    "targetURI"=>AWS_S3_TARGETURI,
               	], $S3Config);
               	
         S3::$useSSL = false;
         $s3 = new S3($S3Config['accessKeyId'], $S3Config['secretAccessKey'], false);
-        
+        $s3->setRegion("ap-south-1");
         $fileURI = $fileName;
         if($folder && strlen($folder)>0) {
             $fileURI = $folder."/".$fileURI;
         }
+        // printArray([
+        //   $bucket, 
+        //   $fileURI, 
+        //   AWS_S3_EXPIRY
+        // ]);
         
-        return $s3->getAuthenticatedURL($bucket, $fileURI,AWS_S3_EXPIRY);
+        return $s3->getAuthenticatedURL(AWS_S3_TARGETURI, $fileURI, AWS_S3_EXPIRY, true, true);
     }
     
     function getS3FileData($fileName, $bucket = 'production', $folder = '', $S3Config = false) {
@@ -48,7 +70,7 @@ if(!function_exists("uploadPhotoToS3")) {
             	    "secretAccessKey"=> AWS_SECRET_KEY,
             	    "bucket"=>$bucket,
             	    "folder"=>$folder,
-            	    //"bucket_security_policy"=> S3::ACL_PUBLIC_READ,
+            	    "bucket_security_policy"=> S3::ACL_PUBLIC_READ,
             	    "security_policy"=> S3::ACL_PUBLIC_READ,
             	    "targetURI"=>AWS_S3_TARGETURI,
               	], $S3Config);
@@ -74,27 +96,30 @@ if(!function_exists("uploadPhotoToS3")) {
             	    "secretAccessKey"=> AWS_SECRET_KEY,
             	    "bucket"=>$bucket,
             	    "folder"=>$folder,
-            	    //"bucket_security_policy"=> S3::ACL_PUBLIC_READ,
+            	    "bucket_security_policy"=> S3::ACL_PUBLIC_READ,
             	    "security_policy"=> S3::ACL_PUBLIC_READ,
             	    "targetURI"=>AWS_S3_TARGETURI,
               	], $S3Config);
-        //printArray($S3Config);
-        S3::$useSSL = false;
-        $s3 = new S3($S3Config['accessKeyId'], $S3Config['secretAccessKey'], false);
+        // printArray($S3Config);exit();
+        // S3::$useSSL = false;
+        $s3 = new S3($S3Config['accessKeyId'], $S3Config['secretAccessKey'], true);
+        $s3->setRegion("ap-south-1");
+        $s3->setSSL(true, false);
 
         // using v4 signature
         //$s3->setSignatureVersion('v4');
-      
+      // printArray($S3Config);exit();
         // List your buckets:
-        //echo "S3::listBuckets(): ".print_r($s3->listBuckets(), 1)."\n";exit();
-      
-        $bucketList = $s3->listBuckets();
-        if(!in_array($bucket,$bucketList)) {
-            if(!$s3->putBucket($bucket, $S3Config['bucket_security_policy'])) {
-                exit("Sorry, Storage Initiation failed");
-            }
-        }
-        $bucketList = $s3->listBuckets();
+        // echo "S3::listBuckets(): ".print_r($s3->listBuckets(), 1)."\n";exit();
+        // echo "S3::listBuckets(): ".print_r($s3->getBucket($bucket), 1)."\n";exit();
+        
+        // $bucketList = $s3->listBuckets();
+        // if(!in_array($bucket,$bucketList)) {
+        //     if(!$s3->putBucket($bucket, $S3Config['bucket_security_policy'])) {
+        //         exit("Sorry, Storage Initiation failed");
+        //     }
+        // }
+        // $bucketList = $s3->listBuckets();
         //var_dump($bucketList);
         
         if($S3Config['folder'] && strlen($S3Config['folder'])>0) {
